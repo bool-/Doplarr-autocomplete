@@ -28,11 +28,11 @@
                      :else (impl/seasons-list details))
            :season-count (dec (count seasons))})))))
 
-(defn request-embed [{:keys [title id season]} media-type]
+(defn request-embed [{:keys [id season]} media-type]
   (a/go
     (let [fourk (a/<! (impl/backend-4k? media-type))
           details (a/<! (impl/details id media-type))]
-      {:title title
+      {:title (str (or (:title details) (:name details)))
        :overview (:overview details)
        :poster (str impl/poster-path (:poster-path details))
        :media-type media-type

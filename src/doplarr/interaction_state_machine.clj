@@ -40,7 +40,7 @@
               options-list (->> (map (fn [s] {:name (str "Season " (:name s)) :value (:id s)}) season-names)
                                 (filter #(str/includes? (str/lower-case (:name %)) (str/lower-case season)))
                                 (then #(->> (take (:max-results @state/config discord/MAX-OPTIONS) %)
-                                            (into []))))]
+                                            (into []))))] 
           (->> @(m/create-interaction-response! messaging id token 8 :data {:choices options-list})
                (else #(fatal % "Error in creating search responses"))))))))
 

@@ -18,12 +18,13 @@
                 {:type 1
                  :name (name media)
                  :description (str "Request " (name media))
-                 :options (when (= (name media) "series")
+                 :options (if (= (name media) "series")
                             (conj base-options {:type 4 ;; 3 is string, 4 is number
                                                 :name "season"
                                                 :description "Query"
                                                 :required true
-                                                :autocomplete true}))})))})
+                                                :autocomplete true})
+                            base-options)})))})
 
 (defn content-response [content]
   {:content content
