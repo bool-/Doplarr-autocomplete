@@ -1,9 +1,9 @@
-{:sonarr/url ""
- :sonarr/api ""
- :radarr/url ""
- :radarr/api ""
- ; :overseerr/url ""
- ; :overseerr/api ""
+{; :sonarr/url ""
+ ; :sonarr/api ""
+ ; :radarr/url ""
+ ; :radarr/api ""
+ :overseerr/url ""
+ :overseerr/api ""
  :discord/token ""
  ; -- Optional Settings
  ; :partial-seasons false
@@ -15,5 +15,6 @@
  ; :sonarr/season-folders true
  ; :discord/max-results 10
  ; :overseerr/default-id 1
- ; :log-level :trace
+ :discord/requested-msg-style :embed
+ :log-level :debug
  }

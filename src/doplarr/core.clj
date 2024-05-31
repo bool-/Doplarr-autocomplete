@@ -29,8 +29,8 @@
     (case (:type interaction)
       ; Slash commands start our request sequence
       :application-command (ism/start-interaction! interaction)
-      ; Message components continue the request until they are complete or failed
-      :message-component (ism/continue-interaction! interaction))))
+      ; application command autocomplete
+      :application-command-autocomplete (ism/start-interaction-autocomplete! interaction))))
 
 ; Once we receive a ready event, grab our bot-id
 (defmethod handle-event! :ready
