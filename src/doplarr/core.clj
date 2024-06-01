@@ -28,9 +28,9 @@
   (let [interaction (discord/interaction-data data)]
     (case (:type interaction)
       ; Slash commands start our request sequence
-      :application-command (ism/start-interaction! interaction)
+      :application-command (ism/handle-application-command interaction)
       ; application command autocomplete
-      :application-command-autocomplete (ism/start-interaction-autocomplete! interaction))))
+      :application-command-autocomplete (ism/handle-application-command-autocomplete interaction))))
 
 ; Once we receive a ready event, grab our bot-id
 (defmethod handle-event! :ready

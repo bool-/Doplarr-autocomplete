@@ -21,7 +21,7 @@
       (when (= media-type :series)
         (let [seasons (impl/seasons-list details)
               backend-partial-seasons? (a/<! (impl/partial-seasons?))]
-          {:season (cond
+          {:seasons (cond
                      (= 1 (count seasons)) (:id (first seasons))
                      (false? partial-seasons) -1
                      (false? backend-partial-seasons?) -1
