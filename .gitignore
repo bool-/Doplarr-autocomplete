@@ -6,6 +6,6 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 .lsp/
-.clj-kondo/
-target/
+.clj-kondo/.cache/
 .calva/
+target/

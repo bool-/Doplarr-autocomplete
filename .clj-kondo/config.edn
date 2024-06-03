@@ -1,0 +1,1 @@
+{:linters {:unresolved-var {:exclude [discljord.messaging com.rpl.specter]}}} ; ignores unresolved errors from dynamic functions
