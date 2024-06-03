@@ -14,13 +14,14 @@
   (->> @(m/create-interaction-response! messaging id token 8 :data response-data)
        (else #(fatal % "Error in creating search responses"))))
 
-(defn- handle-request! [interaction query season media-type]
+(defn- handle-request-autocomplete! [interaction query season media-type focused-option]
   (a/go
     (let [id (:id interaction)
           token (:token interaction)
           {:keys [messaging]} @state/discord]
+      (info focused-option)
       (cond
-        (and (or (not (string? query)) (not (str/blank? query))) (nil? season)) ; this is fuckin disgusting
+        (and (= focused-option (name media-type)) (or (not (string? query)) (not (str/blank? query))))
         (let [results (->> (log-on-error
                             (a/<! ((utils/media-fn media-type "search") query media-type))
                             "Exception from search")
@@ -28,7 +29,7 @@
                                        (into []))))]
           (create-response! messaging id token (discord/search-response-autocomplete results)))
 
-        (not (nil? season))
+        (= focused-option "season") 
         (let [add-opts (log-on-error
                         (a/<! ((utils/media-fn media-type "additional-options") {:id query} media-type))
                         "Exception thrown from additional-options")
@@ -42,22 +43,28 @@
                                             (into []))))]
           (create-response! messaging id token {:choices options-list}))))))
 
+(defn find-focused-option [options]
+  (some (fn [[key opt]]
+          (when (:focused opt)
+            (name key)))
+        options))
+
 (defn handle-application-command-autocomplete [interaction]
   (a/go
     (let [payload-opts (:options (:payload interaction))
           payload-name (:name (:payload interaction))
           media-type (first (keys payload-opts))
+          focused-option (find-focused-option ((keyword media-type) payload-opts))
           query (s/select-one [media-type media-type :value] payload-opts)
           season (s/select-one [media-type :season :value] payload-opts)]
-      (info payload-opts)
+      (info ((keyword media-type) payload-opts))
       (info "Performing search for" (name media-type) query)
       (when (= payload-name "request")
-        (a/<! (handle-request! interaction query season media-type))))))
+        (a/<! (handle-request-autocomplete! interaction query season media-type focused-option))))))
 
 (defn handle-application-command [interaction] 
   (a/go 
-    (let [uuid (str (java.util.UUID/randomUUID))
-          id (:id interaction)
+    (let [id (:id interaction)
           token (:token interaction)
           payload-opts (:options (:payload interaction))
           media-type (first (keys payload-opts))
@@ -75,7 +82,6 @@
           payload (merge request-embed-payload add-opts)
           {:keys [messaging bot-id]} @state/discord]
       
-      (info payload-opts)
       ; Send the ack for delayed response
       (->> @(m/create-interaction-response! messaging id token 5 :data {:flags 64})
            (else #(fatal % "Error in interaction ack")))
