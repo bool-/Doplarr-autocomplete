@@ -47,21 +47,22 @@
     (let [payload-opts (:options (:payload interaction))
           payload-name (:name (:payload interaction))
           media-type (first (keys payload-opts))
-          query (s/select-one [media-type media-type] payload-opts)
-          season (s/select-one [media-type :season] payload-opts)]
+          query (s/select-one [media-type media-type :value] payload-opts)
+          season (s/select-one [media-type :season :value] payload-opts)]
+      (info payload-opts)
       (info "Performing search for" (name media-type) query)
       (when (= payload-name "request")
         (a/<! (handle-request! interaction query season media-type))))))
 
-(defn handle-application-command [interaction]
-  (a/go
+(defn handle-application-command [interaction] 
+  (a/go 
     (let [uuid (str (java.util.UUID/randomUUID))
           id (:id interaction)
           token (:token interaction)
           payload-opts (:options (:payload interaction))
           media-type (first (keys payload-opts))
-          query (s/select-one [media-type media-type] payload-opts)
-          season (s/select-one [media-type :season] payload-opts)
+          query (s/select-one [media-type media-type :value] payload-opts)
+          season (s/select-one [media-type :season :value] payload-opts)
           user-id (:user-id interaction)
           channel-id (:channel-id interaction)
           request-embed-payload {:id query :season season}
@@ -73,8 +74,9 @@
                     "Exception thrown from additional-options")
           payload (merge request-embed-payload add-opts)
           {:keys [messaging bot-id]} @state/discord]
-
-                                        ; Send the ack for delayed response
+      
+      (info payload-opts)
+      ; Send the ack for delayed response
       (->> @(m/create-interaction-response! messaging id token 5 :data {:flags 64})
            (else #(fatal % "Error in interaction ack")))
                                         ; Search for results

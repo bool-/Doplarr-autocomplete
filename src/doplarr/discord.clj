@@ -49,8 +49,15 @@
    :movie "https://i.imgur.com/44ueTES.png"})
 
 (defn application-command-interaction-option-data [app-com-int-opt]
-  [(keyword (:name app-com-int-opt))
-   (into {} (map (juxt (comp keyword :name) :value)) (:options app-com-int-opt))])
+  (letfn [(process-option [opt]
+            [(keyword (:name opt))
+             {:type (:type opt)
+              :value (:value opt)
+              :options (into {} (map process-option (:options opt)))
+              :focused (:focused opt)}])]
+    [(keyword (:name app-com-int-opt))
+     (into {} (map process-option (:options app-com-int-opt)))]))
+
 
 (defn interaction-data [interaction]
   {:id (:id interaction)
@@ -70,7 +77,7 @@
   {:name (apply str (take MAX-CHARACTERS (str (or (:title result) (:name result)) " (" (:year result) ")")))
    :value (:id result)})
 
-(defn search-response-autocomplete [results] 
+(defn search-response-autocomplete [results]
   (let [choices (map autocomplete-option results)]
     {:choices choices}))
 
