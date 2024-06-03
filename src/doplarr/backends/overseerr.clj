@@ -31,13 +31,15 @@
 (defn request-embed [{:keys [id season]} media-type]
   (a/go
     (let [fourk (a/<! (impl/backend-4k? media-type))
-          details (a/<! (impl/details id media-type))]
+          details (a/<! (impl/details id media-type))
+          seasons (impl/seasons-list details)]
       {:title (str (or (:title details) (:name details)))
        :overview (:overview details)
        :poster (str impl/poster-path (:poster-path details))
        :media-type media-type
        :request-formats (cond-> [""] fourk (conj "4K"))
-       :season season})))
+       :season season
+       :season-count (dec (count seasons))})))
 
 (defn request [payload media-type]
   (a/go

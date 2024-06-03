@@ -65,14 +65,10 @@
           season (s/select-one [media-type :season :value] payload-opts)
           user-id (:user-id interaction)
           channel-id (:channel-id interaction)
-          request-embed-payload {:id query :season season}
+          payload {:id query :season season}
           embed (log-on-error
-                 (a/<! ((utils/media-fn media-type "request-embed") request-embed-payload media-type))
+                 (a/<! ((utils/media-fn media-type "request-embed") payload media-type))
                  "Exception from request-embed")
-          add-opts (log-on-error
-                    (a/<! ((utils/media-fn media-type "additional-options") {:id query} media-type)) ; TODO cache this
-                    "Exception thrown from additional-options")
-          payload (merge request-embed-payload add-opts)
           {:keys [messaging bot-id]} @state/discord]
       
       ; Send the ack for delayed response
@@ -85,7 +81,7 @@
                                    (else #(fatal % "Error in message response"))))]
         (->>  (log-on-error
                (a/<!! ((utils/media-fn media-type "request")
-                       (assoc payload :discord-id user-id)
+                       (assoc embed :discord-id user-id)
                        media-type))
                "Exception from request")
               (then (fn [status]
