@@ -19,7 +19,6 @@
     (let [id (:id interaction)
           token (:token interaction)
           {:keys [messaging]} @state/discord]
-      (info focused-option)
       (cond
         (and (= focused-option (name media-type)) (or (not (string? query)) (not (str/blank? query))))
         (let [results (->> (log-on-error
@@ -43,18 +42,12 @@
                                             (into []))))]
           (create-response! messaging id token {:choices options-list}))))))
 
-(defn find-focused-option [options]
-  (some (fn [[key opt]]
-          (when (:focused opt)
-            (name key)))
-        options))
-
 (defn handle-application-command-autocomplete [interaction]
   (a/go
     (let [payload-opts (:options (:payload interaction))
           payload-name (:name (:payload interaction))
           media-type (first (keys payload-opts))
-          focused-option (find-focused-option ((keyword media-type) payload-opts))
+          focused-option (discord/find-focused-option ((keyword media-type) payload-opts))
           query (s/select-one [media-type media-type :value] payload-opts)
           season (s/select-one [media-type :season :value] payload-opts)]
       (info ((keyword media-type) payload-opts))

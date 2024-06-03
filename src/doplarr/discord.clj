@@ -48,6 +48,12 @@
   {:series "https://thetvdb.com/images/logo.png"
    :movie "https://i.imgur.com/44ueTES.png"})
 
+(defn find-focused-option [options]
+  (some (fn [[key opt]]
+          (when (:focused opt)
+            (name key)))
+        options))
+
 (defn application-command-interaction-option-data [app-com-int-opt]
   (letfn [(process-option [opt]
             [(keyword (:name opt))
