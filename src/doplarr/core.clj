@@ -7,7 +7,7 @@
    [discljord.messaging :as m]
    [doplarr.config :as config]
    [doplarr.discord :as discord]
-   [doplarr.interaction-state-machine :as ism]
+   [doplarr.discord-command-handler :as ism]
    [doplarr.state :as state]
    [taoensso.timbre :refer [debug fatal info] :as timbre]
    [taoensso.timbre.tools.logging :as tlog])

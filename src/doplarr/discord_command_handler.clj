@@ -1,4 +1,4 @@
-(ns doplarr.interaction-state-machine
+(ns doplarr.discord-command-handler
   (:require
    [clojure.core.async :as a]
    [clojure.string :as str]
@@ -8,16 +8,25 @@
    [doplarr.state :as state]
    [doplarr.utils :as utils :refer [log-on-error]]
    [fmnoise.flow :refer [else then]]
-   [taoensso.timbre :refer [fatal info]]))
+   [taoensso.timbre :refer [fatal info debug]]))
 
 (defn- create-response! [messaging id token response-data]
   (->> @(m/create-interaction-response! messaging id token 8 :data response-data)
        (else #(fatal % "Error in creating search responses"))))
 
-(defn- handle-request-autocomplete! [interaction query season media-type focused-option]
+(defmulti handle-autocomplete 
+  (fn [interaction]
+   (:name (:payload interaction))))
+
+(defmethod handle-autocomplete "request" [interaction]
   (a/go
     (let [id (:id interaction)
           token (:token interaction)
+          payload-opts (:options (:payload interaction))
+          media-type (first (keys payload-opts))
+          focused-option (discord/find-focused-option ((keyword media-type) payload-opts))
+          query (s/select-one [media-type media-type :value] payload-opts)
+          season (s/select-one [media-type :season :value] payload-opts)
           {:keys [messaging]} @state/discord]
       (cond
         (and (= focused-option (name media-type)) (or (not (string? query)) (not (str/blank? query))))
@@ -27,8 +36,8 @@
                            (then #(->> (take (:max-results @state/config discord/MAX-OPTIONS) %)
                                        (into []))))]
           (create-response! messaging id token (discord/search-response-autocomplete results)))
-
-        (= focused-option "season") 
+  
+        (= focused-option "season")
         (let [add-opts (log-on-error
                         (a/<! ((utils/media-fn media-type "additional-options") {:id query} media-type))
                         "Exception thrown from additional-options")
@@ -44,18 +53,16 @@
 
 (defn handle-application-command-autocomplete [interaction]
   (a/go
-    (let [payload-opts (:options (:payload interaction))
-          payload-name (:name (:payload interaction))
-          media-type (first (keys payload-opts))
-          focused-option (discord/find-focused-option ((keyword media-type) payload-opts))
-          query (s/select-one [media-type media-type :value] payload-opts)
-          season (s/select-one [media-type :season :value] payload-opts)]
-      (info "Performing search for" (name media-type) query)
-      (when (= payload-name "request")
-        (a/<! (handle-request-autocomplete! interaction query season media-type focused-option))))))
+    (let [payload-name (:name (:payload interaction))]
+      (debug "Command autocomplete requested:" payload-name) 
+      (a/<! (handle-autocomplete interaction)))))
 
-(defn handle-application-command [interaction] 
-  (a/go 
+(defmulti handle-command 
+  (fn [interaction] 
+    (:name (:payload interaction))))
+
+(defmethod handle-command "request" [interaction] 
+  (a/go
     (let [id (:id interaction)
           token (:token interaction)
           payload-opts (:options (:payload interaction))
@@ -69,13 +76,13 @@
                         (a/<! ((utils/media-fn media-type "request-embed") payload media-type))
                         "Exception from request-embed") payload)
           {:keys [messaging bot-id]} @state/discord]
-      
-      ; Send the ack for delayed response
+  
+        ; Send the ack for delayed response
       (->> @(m/create-interaction-response! messaging id token 5 :data {:flags 64})
            (else #(fatal % "Error in interaction ack")))
-                                        ; Search for results
+                                          ; Search for results
       (info "Performing request for" (name media-type) payload)
-
+  
       (letfn [(msg-resp [msg] (->> @(m/edit-original-interaction-response! messaging bot-id token (discord/content-response msg))
                                    (else #(fatal % "Error in message response"))))]
         (->>  (log-on-error
@@ -104,3 +111,10 @@
                           (->> @(m/edit-original-interaction-response! messaging bot-id token (discord/content-response "Unspecified error on request, check logs"))
                                (then #(fatal "Non 403 error on request" % data))
                                (else #(fatal % "Error in sending error response"))))))))))))
+
+
+(defn handle-application-command [interaction] 
+  (a/go
+     (let [payload-name (:name (:payload interaction))]
+       (debug "Command performed:" payload-name)
+       (a/<! (handle-command interaction)))))
