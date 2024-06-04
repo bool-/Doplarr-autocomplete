@@ -19,6 +19,7 @@
 ;  --- Optional settings
 (spec/def :discord/max-results (spec/int-in 1 26))
 (spec/def :discord/requested-msg-style #{:none :plain :embed})
+(spec/def :discord/status-message string?)
 
 ; Radarr optionals
 (spec/def :radarr/quality-profile string?)
@@ -54,6 +55,7 @@ If you have configured one, make sure to check spelling. A valid configuration c
                     (spec/keys :req [:discord/token]
                                :opt [:discord/max-results
                                      :discord/requested-msg-style
+                                     :discord/status-message
                                      :radarr/quality-profile
                                      :sonarr/quality-profile
                                      :sonarr/language-profile

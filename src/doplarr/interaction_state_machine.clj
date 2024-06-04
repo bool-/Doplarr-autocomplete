@@ -50,7 +50,6 @@
           focused-option (discord/find-focused-option ((keyword media-type) payload-opts))
           query (s/select-one [media-type media-type :value] payload-opts)
           season (s/select-one [media-type :season :value] payload-opts)]
-      (info ((keyword media-type) payload-opts))
       (info "Performing search for" (name media-type) query)
       (when (= payload-name "request")
         (a/<! (handle-request-autocomplete! interaction query season media-type focused-option))))))
@@ -66,9 +65,9 @@
           user-id (:user-id interaction)
           channel-id (:channel-id interaction)
           payload {:id query :season season}
-          embed (log-on-error
-                 (a/<! ((utils/media-fn media-type "request-embed") payload media-type))
-                 "Exception from request-embed")
+          embed (merge (log-on-error
+                        (a/<! ((utils/media-fn media-type "request-embed") payload media-type))
+                        "Exception from request-embed") payload)
           {:keys [messaging bot-id]} @state/discord]
       
       ; Send the ack for delayed response
@@ -91,7 +90,7 @@
                         :processing (msg-resp "This is currently processing and should be available soon!")
                         :available (msg-resp "This selection is already available!")
                         (do
-                          (info "Performing request for " query)
+                          (info "Performing request for" query)
                           (msg-resp "Request performed!")
                           (case (:discord/requested-msg-style @state/config)
                             :none nil

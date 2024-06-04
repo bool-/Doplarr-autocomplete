@@ -13,8 +13,9 @@
  ; :sonarrr/language-profile ""
  ; :sonarr/rootfolder ""
  ; :sonarr/season-folders true
- ; :discord/max-results 10
- ; :overseerr/default-id 1
+ ; :discord/max-results 10 
  ; :discord/requested-msg-style :embed
- ; :log-level :debug
+ ; :discord/status-message ""
+ ; :overseerr/default-id 1 
+ ; :log-level :debug 
  }

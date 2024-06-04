@@ -57,7 +57,10 @@
         messaging-ch (m/start-connection! token)
         init-state {:connection connection-ch
                     :event event-ch
-                    :messaging messaging-ch}]
+                    :messaging messaging-ch}
+        activity-str (:discord/status-message @state/config)]
+    (when activity-str
+      (c/status-update! connection-ch :activity (c/create-activity :name activity-str :type :watch)))
     (reset! state/discord init-state)
     (try (e/message-pump! event-ch handle-event!)
          (catch Exception e (fatal e "Exception thrown from event handler"))
