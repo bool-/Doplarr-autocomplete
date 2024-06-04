@@ -10,6 +10,14 @@
    [fmnoise.flow :refer [else then]]
    [taoensso.timbre :refer [fatal info debug]]))
 
+
+;; TODO at some point i want to rewrite this entire
+;; command handler file to handle the commands as follows
+;; - /request 4k movie
+;; - /request 4k series
+;; - /request movie
+;; - /request series
+
 (defn- create-response! [messaging id token response-data]
   (->> @(m/create-interaction-response! messaging id token 8 :data response-data)
        (else #(fatal % "Error in creating search responses"))))
@@ -35,8 +43,7 @@
                             "Exception from search")
                            (then #(->> (take (:max-results @state/config discord/MAX-OPTIONS) %)
                                        (into []))))]
-          (create-response! messaging id token (discord/search-response-autocomplete results)))
-  
+          (create-response! messaging id token (discord/search-response-autocomplete results))) 
         (= focused-option "season")
         (let [add-opts (log-on-error
                         (a/<! ((utils/media-fn media-type "additional-options") {:id query} media-type))
@@ -49,6 +56,7 @@
                                 (filter #(str/includes? (str/lower-case (:name %)) (str/lower-case season)))
                                 (then #(->> (take (:max-results @state/config discord/MAX-OPTIONS) %)
                                             (into []))))]
+          ;; taking the max characters here is probably unnecessary 
           (create-response! messaging id token {:choices options-list}))))))
 
 (defn handle-application-command-autocomplete [interaction]
