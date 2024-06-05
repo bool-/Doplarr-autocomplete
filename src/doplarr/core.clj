@@ -43,7 +43,11 @@
   (info "Connected to guild")
   (let [media-types (config/available-media @state/config)
         messaging (:messaging @state/discord)
-        bot-id (:bot-id @state/discord)]
+        connection (:connection @state/discord)
+        bot-id (:bot-id @state/discord)
+        activity-str (:discord/status-message @state/config)] 
+    (when activity-str
+      (c/status-update! connection :activity (c/create-activity :name activity-str :type :watch)))
     (discord/register-commands media-types bot-id messaging id)))
 
 (defmethod handle-event! :default
@@ -57,10 +61,7 @@
         messaging-ch (m/start-connection! token)
         init-state {:connection connection-ch
                     :event event-ch
-                    :messaging messaging-ch}
-        activity-str (:discord/status-message @state/config)]
-    (when activity-str
-      (c/status-update! connection-ch :activity (c/create-activity :name activity-str :type :watch)))
+                    :messaging messaging-ch}]
     (reset! state/discord init-state)
     (try (e/message-pump! event-ch handle-event!)
          (catch Exception e (fatal e "Exception thrown from event handler"))
